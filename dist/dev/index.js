@@ -804,14 +804,10 @@ function createVTTCueTemplate(cue) {
   return { cue, content: template.content };
 }
 function renderVTTCueString(cue, currentTime = 0) {
-  console.log("Version X");
-  console.log("renderVTTCueString, cue:", cue, ", currentTime:", currentTime);
   return renderVTTTokensString(tokenizeVTTCue(cue), currentTime);
 }
 function renderVTTTokensString(tokens, currentTime = 0) {
   let attrs, result = "";
-  console.log("Version 18");
-  let dataCurrentSet = false;
   for (const token of tokens) {
     if (token.type === "text") {
       result += token.data;
@@ -827,8 +823,6 @@ function renderVTTTokensString(tokens, currentTime = 0) {
         attrs["data-time"] = token.time;
         attrs["data-future"] = token.time > currentTime;
         attrs["data-past"] = token.time < currentTime;
-        console.log("Current time:", currentTime, "Token time:", token.time.toString(), "Data current set:", dataCurrentSet.toString());
-        console.log("renderVTTTokensString, token:", token, ", attrs:", attrs, ", currentTime:", currentTime, token.children);
       }
       attrs.style = `${token.color ? `color: ${token.color};` : ""}${token.bgColor ? `background-color: ${token.bgColor};` : ""}`;
       const attributes = Object.entries(attrs).filter((v) => v[1]).map((v) => `${v[0]}="${v[1] === true ? "" : v[1]}"`).join(" ");
@@ -850,7 +844,6 @@ function updateTimedVTTCueNodes(root, currentTime) {
       continue;
     if (!presentSet && time >= currentTime && prevEl) {
       setDataAttr(prevEl, "present");
-      createPresentElement(prevEl);
       presentSet = true;
     } else
       el.removeAttribute("data-present");
@@ -866,12 +859,7 @@ function updateTimedVTTCueNodes(root, currentTime) {
   }
   if (!presentSet && prevEl && prevEl.getAttribute("data-past") !== null) {
     setDataAttr(prevEl, "present");
-    createPresentElement(prevEl);
   }
-}
-function createPresentElement(root) {
-  const inner = root.innerHTML.split("<", 2);
-  root.innerHTML = "<span data-present>" + inner[0] + "</span>" + (inner.length == 2 ? "<" + inner[1] : "");
 }
 
 function debounce(fn, delay) {
@@ -1352,4 +1340,4 @@ class CaptionsRenderer {
   }
 }
 
-export { CaptionsRenderer as C, ParseError as P, TextCue as T, VTTParser as V, VTTBlock as a, VTTCue as b, ParseErrorCode as c, parseResponse as d, parseByteStream as e, parseText as f, parseTextStream as g, VTTRegion as h, createVTTCueTemplate as i, renderVTTTokensString as j, createPresentElement as k, parseVTTTimestamp as p, renderVTTCueString as r, tokenizeVTTCue as t, updateTimedVTTCueNodes as u };
+export { CaptionsRenderer as C, ParseError as P, TextCue as T, VTTParser as V, VTTBlock as a, VTTCue as b, ParseErrorCode as c, parseResponse as d, parseByteStream as e, parseText as f, parseTextStream as g, VTTRegion as h, createVTTCueTemplate as i, renderVTTTokensString as j, parseVTTTimestamp as p, renderVTTCueString as r, tokenizeVTTCue as t, updateTimedVTTCueNodes as u };

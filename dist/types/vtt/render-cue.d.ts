@@ -8,4 +8,3 @@ export interface VTTCueTemplate {
 export declare function renderVTTCueString(cue: VTTCue, currentTime?: number): string;
 export declare function renderVTTTokensString(tokens: VTTNode[], currentTime?: number): string;
 export declare function updateTimedVTTCueNodes(root: Element, currentTime: number): void;
-export declare function createPresentElement(root: Element): void;

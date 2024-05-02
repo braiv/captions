@@ -58,7 +58,7 @@ const ParseErrorBuilder = {
     });
   },
   // SSA-specific errors
-  N(type, line) {
+  T(type, line) {
     return new ParseError({
       code: ParseErrorCode.BadFormat,
       reason: `format missing for \`${type}\` block on line ${line}`,

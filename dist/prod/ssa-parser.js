@@ -3,67 +3,67 @@ import { b as VTTCue, p as parseVTTTimestamp } from './index.js';
 const FORMAT_START_RE = /^Format:[\s\t]*/, STYLE_START_RE = /^Style:[\s\t]*/, DIALOGUE_START_RE = /^Dialogue:[\s\t]*/, FORMAT_SPLIT_RE = /[\s\t]*,[\s\t]*/, STYLE_FUNCTION_RE = /\{[^}]+\}/g, NEW_LINE_RE = /\\N/g, STYLES_SECTION_START_RE = /^\[(.*)[\s\t]?Styles\]$/, EVENTS_SECTION_START_RE = /^\[(.*)[\s\t]?Events\]$/;
 class SSAParser {
   f;
-  P = 0;
+  O = 0;
   a = null;
   j = [];
   k = [];
-  O = null;
+  N = null;
   d;
-  Q = {};
+  P = {};
   async init(init) {
     this.f = init;
     if (init.errors)
       this.d = (await import('./errors.js')).ParseErrorBuilder;
   }
   parse(line, lineCount) {
-    if (this.P) {
-      switch (this.P) {
+    if (this.O) {
+      switch (this.O) {
         case 1:
           if (line === "") {
-            this.P = 0;
+            this.O = 0;
           } else if (STYLE_START_RE.test(line)) {
-            if (this.O) {
+            if (this.N) {
               const styles = line.replace(STYLE_START_RE, "").split(FORMAT_SPLIT_RE);
-              this.T(styles);
+              this.S(styles);
             } else {
-              this.e(this.d?.N("Style", lineCount));
+              this.e(this.d?.T("Style", lineCount));
             }
           } else if (FORMAT_START_RE.test(line)) {
-            this.O = line.replace(FORMAT_START_RE, "").split(FORMAT_SPLIT_RE);
+            this.N = line.replace(FORMAT_START_RE, "").split(FORMAT_SPLIT_RE);
           } else if (EVENTS_SECTION_START_RE.test(line)) {
-            this.O = null;
-            this.P = 2;
+            this.N = null;
+            this.O = 2;
           }
           break;
         case 2:
           if (line === "") {
-            this.R();
+            this.Q();
           } else if (DIALOGUE_START_RE.test(line)) {
-            this.R();
-            if (this.O) {
+            this.Q();
+            if (this.N) {
               const dialogue = line.replace(DIALOGUE_START_RE, "").split(FORMAT_SPLIT_RE), cue = this.U(dialogue, lineCount);
               if (cue)
                 this.a = cue;
             } else {
-              this.e(this.d?.N("Dialogue", lineCount));
+              this.e(this.d?.T("Dialogue", lineCount));
             }
           } else if (this.a) {
             this.a.text += "\n" + line.replace(STYLE_FUNCTION_RE, "").replace(NEW_LINE_RE, "\n");
           } else if (FORMAT_START_RE.test(line)) {
-            this.O = line.replace(FORMAT_START_RE, "").split(FORMAT_SPLIT_RE);
+            this.N = line.replace(FORMAT_START_RE, "").split(FORMAT_SPLIT_RE);
           } else if (STYLES_SECTION_START_RE.test(line)) {
-            this.O = null;
-            this.P = 1;
+            this.N = null;
+            this.O = 1;
           } else if (EVENTS_SECTION_START_RE.test(line)) {
-            this.O = null;
+            this.N = null;
           }
       }
     } else if (line === "") ; else if (STYLES_SECTION_START_RE.test(line)) {
-      this.O = null;
-      this.P = 1;
+      this.N = null;
+      this.O = 1;
     } else if (EVENTS_SECTION_START_RE.test(line)) {
-      this.O = null;
-      this.P = 2;
+      this.N = null;
+      this.O = 2;
     }
   }
   done() {
@@ -74,17 +74,17 @@ class SSAParser {
       errors: this.k
     };
   }
-  R() {
+  Q() {
     if (!this.a)
       return;
     this.j.push(this.a);
     this.f.onCue?.(this.a);
     this.a = null;
   }
-  T(values) {
+  S(values) {
     let name = "Default", styles = {}, outlineX, align = "center", vertical = "bottom", marginV, outlineY = 1.2, outlineColor, bgColor, borderStyle = 3, transform = [];
-    for (let i = 0; i < this.O.length; i++) {
-      const field = this.O[i], value = values[i];
+    for (let i = 0; i < this.N.length; i++) {
+      const field = this.N[i], value = values[i];
       switch (field) {
         case "Name":
           name = value;
@@ -176,7 +176,7 @@ class SSAParser {
           }
       }
     }
-    styles.S = vertical;
+    styles.R = vertical;
     styles["--cue-white-space"] = "normal";
     styles["--cue-line-height"] = "normal";
     styles["--cue-text-align"] = align;
@@ -204,15 +204,15 @@ class SSAParser {
     }
     if (transform.length)
       styles["--cue-transform"] = transform.join(" ");
-    this.Q[name] = styles;
+    this.P[name] = styles;
   }
   U(values, lineCount) {
     const fields = this.V(values);
     const timestamp = this.o(fields.Start, fields.End, lineCount);
     if (!timestamp)
       return;
-    const cue = new VTTCue(timestamp[0], timestamp[1], ""), styles = { ...this.Q[fields.Style] || {} }, voice = fields.Name ? `<v ${fields.Name}>` : "";
-    const vertical = styles.S, marginLeft = fields.MarginL && parseFloat(fields.MarginL), marginRight = fields.MarginR && parseFloat(fields.MarginR), marginV = fields.MarginV && parseFloat(fields.MarginV);
+    const cue = new VTTCue(timestamp[0], timestamp[1], ""), styles = { ...this.P[fields.Style] || {} }, voice = fields.Name ? `<v ${fields.Name}>` : "";
+    const vertical = styles.R, marginLeft = fields.MarginL && parseFloat(fields.MarginL), marginRight = fields.MarginR && parseFloat(fields.MarginR), marginV = fields.MarginV && parseFloat(fields.MarginV);
     if (marginLeft) {
       styles["--cue-width"] = "auto";
       styles["--cue-left"] = marginLeft + "px";
@@ -224,16 +224,16 @@ class SSAParser {
     if (marginV && vertical !== "center") {
       styles[`--cue-${vertical}`] = marginV + "px";
     }
-    cue.text = voice + values.slice(this.O.length - 1).join(", ").replace(STYLE_FUNCTION_RE, "").replace(NEW_LINE_RE, "\n");
-    delete styles.S;
+    cue.text = voice + values.slice(this.N.length - 1).join(", ").replace(STYLE_FUNCTION_RE, "").replace(NEW_LINE_RE, "\n");
+    delete styles.R;
     if (Object.keys(styles).length)
       cue.style = styles;
     return cue;
   }
   V(values) {
     const fields = {};
-    for (let i = 0; i < this.O.length; i++) {
-      fields[this.O[i]] = values[i];
+    for (let i = 0; i < this.N.length; i++) {
+      fields[this.N[i]] = values[i];
     }
     return fields;
   }
