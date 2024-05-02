@@ -66,13 +66,24 @@ export function renderVTTTokensString(tokens: VTTNode[], currentTime = 0): strin
 }
 
 export function updateTimedVTTCueNodes(root: Element, currentTime: number) {
-  if (IS_SERVER) return;
-  for (const el of root.querySelectorAll('[data-part="timed"]')) {
-    const time = Number(el.getAttribute('data-time'));
-    if (Number.isNaN(time)) continue;
-    if (time > currentTime) setDataAttr(el, 'future');
-    else el.removeAttribute('data-future');
-    if (time < currentTime) setDataAttr(el, 'past');
-    else el.removeAttribute('data-past');
-  }
+    if (IS_SERVER) return;
+    let presentSet = false;
+    let prevEl: Element | null = null;
+    for (const el of root.querySelectorAll('[data-part="timed"]')) {
+        const time = Number(el.getAttribute('data-time'));
+        if (Number.isNaN(time)) continue;
+        if (!presentSet && time >= currentTime && prevEl) {
+            setDataAttr(prevEl, 'present');
+            presentSet = true
+        } else el.removeAttribute('data-present');
+        if (time > currentTime) setDataAttr(el, 'future');
+        else el.removeAttribute('data-future');
+        if (time < currentTime) setDataAttr(el, 'past');
+        else el.removeAttribute('data-past');
+        prevEl = el;
+    }
+    //Process the last element to see if it should marked as the 'present' element
+    if (!presentSet && prevEl && prevEl.getAttribute('data-past') !== null ) {
+            setDataAttr(prevEl, 'present');
+    }
 }
